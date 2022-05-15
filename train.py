@@ -67,6 +67,7 @@ def de_interleave(x, size):
 
 def main():
     parser = argparse.ArgumentParser(description='PyTorch FixMatch Training')
+    parser.add_argument('--alg', default='fixmatch', type=str,help='Algorithm to be used from [fixmatch,supervised]')
     parser.add_argument('--gpu-id', default='0', type=int,
                         help='id(s) for CUDA_VISIBLE_DEVICES')
     parser.add_argument('--num-workers', type=int, default=4,
@@ -361,20 +362,34 @@ def train(args, labeled_trainloader, unlabeled_trainloader, test_loader,
             max_probs, targets_u = torch.max(pseudo_label, dim=-1)
             mask = max_probs.ge(args.threshold).float()
 
-            Lu = (F.cross_entropy(logits_u_s, targets_u,
-                                  reduction='none') * mask).mean()
+            if args.alg=='fixmatch':
+                Lu = (F.cross_entropy(logits_u_s, targets_u,
+                                    reduction='none') * mask).mean()
 
-            loss = Lx + args.lambda_u * Lu
+                loss = Lx + args.lambda_u * Lu
 
-            if args.amp:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
+                if args.amp:
+                    with amp.scale_loss(loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    loss.backward()
+
+                losses.update(loss.item())
+                losses_x.update(Lx.item())
+                losses_u.update(Lu.item())
             else:
-                loss.backward()
 
-            losses.update(loss.item())
-            losses_x.update(Lx.item())
-            losses_u.update(Lu.item())
+                loss = Lx 
+
+                if args.amp:
+                    with amp.scale_loss(loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    loss.backward()
+
+                losses.update(loss.item())
+                losses_x.update(Lx.item())
+                losses_u.update(0)
             optimizer.step()
             scheduler.step()
             if args.use_ema:
@@ -441,6 +456,7 @@ def train(args, labeled_trainloader, unlabeled_trainloader, test_loader,
 
     if args.local_rank in [-1, 0]:
         args.writer.close()
+    return test_accs
 
 
 def test(args, test_loader, model, epoch):
