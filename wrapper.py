@@ -477,7 +477,7 @@ if __name__ == "__main__":
     test_x = torch.Tensor([np.array(test_set['images'][i].astype(np.float32)) for i in range(len(test_set['images']))])
     test_y = torch.Tensor([np.array([test_set['labels'][i]]) for i in range(len(test_set['images']))])
     my_testdataset = TensorDataset(test_x,test_y)
-    test_loader = DataLoader(my_dataset)
+    test_loader = DataLoader(my_testdataset)
     labeled_dataset = [[train_set['images'][i].astype(np.float32),train_set['labels'][i]] for i in range(len(train_set['images']))]
     # net = wrn.WRN(2, dataset_cfg["num_classes"], args.input_channels)
     net = build_wideresnet(depth=args.model_depth,widen_factor=args.model_width,dropout=0,num_classes=args.num_classes)
