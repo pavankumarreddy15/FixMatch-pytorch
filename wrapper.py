@@ -376,6 +376,7 @@ if __name__ == "__main__":
     indices = rng.permutation(len(train_set["images"]))
     train_set["images"] = train_set["images"][indices]
     train_set["labels"] = train_set["labels"][indices]
+    
 
     _DATA_DIR = "data"
     _EXP_DATA_DIR = os.path.join(_DATA_DIR, args.dataset, str(args.num_labeled), args.setting)
@@ -422,6 +423,8 @@ if __name__ == "__main__":
         torch.backends.cudnn.benchmark = True
     else:
         device = "cpu"
+    
+    args.device = device
 
     counter_map = {}
     exp_name = ""
