@@ -152,7 +152,7 @@ class MyDataset(Dataset):
         if self.labeled:
             return x, y
         else:
-            print(x)
+            #print(x)
             return x
     
     def __len__(self):
