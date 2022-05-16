@@ -475,7 +475,7 @@ if __name__ == "__main__":
     train_dataset = [train_set['images'][i].astype(np.float32) for i in range(len(train_set['images']))]
     test_dataset = [[test_set['images'][i].astype(np.float32),test_set['labels'][i]] for i in range(len(test_set['images']))]
     test_x = torch.Tensor([np.array(test_set['images'][i].astype(np.float32)) for i in range(len(test_set['images']))])
-    test_y = torch.Tensor([np.array(test_set['labels'][i]) for i in range(len(test_set['images']))])
+    test_y = torch.Tensor([np.array([test_set['labels'][i]]) for i in range(len(test_set['images']))])
     my_testdataset = TensorDataset(test_x,test_y)
     test_loader = DataLoader(my_dataset)
     labeled_dataset = [[train_set['images'][i].astype(np.float32),train_set['labels'][i]] for i in range(len(train_set['images']))]
