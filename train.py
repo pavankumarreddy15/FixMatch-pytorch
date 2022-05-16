@@ -62,6 +62,7 @@ def interleave(x, size):
 
 def de_interleave(x, size):
     s = list(x.shape)
+    print(s)
     return x.reshape([size, -1] + s[1:]).transpose(0, 1).reshape([-1] + s[1:])
 
 
