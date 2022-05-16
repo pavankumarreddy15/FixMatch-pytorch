@@ -170,7 +170,7 @@ def _load_cifar10():
     splits["train"] = train_data
     splits["test"]  = test_data
     splits["val"]   = val_data
-    return splits.values(),sel_cls_idx
+    return train_data,test_data,val_data,sel_cls_idx
 
 def _load_svhn():
     splits = {}
@@ -193,7 +193,7 @@ def _load_svhn():
     splits["train"] = train_data
     splits["test"]  = test_data
     splits["val"]   = val_data
-    return splits.values(),sel_cls_idx
+    return train_data,test_data,sel_cls_idx
 
 def select_subset(labeled_indices,unlabeled_indices,features,features_available,num_labels,numclasses,labels,images,total_size,setting,strat,model):
     if features_available and setting=="FL2MI":
