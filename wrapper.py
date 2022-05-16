@@ -143,7 +143,7 @@ class MyDataset(Dataset):
         y = self.targets[index]
         
         if self.transform:
-            x = Image.fromarray(self.data[index].to(torch.int).transpose(1,2,0))
+            x = Image.fromarray(np.array(self.data[index].to(torch.int)).transpose(1,2,0))
             x = self.transform(x)
         if labeled:
             return x, y
