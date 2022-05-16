@@ -9,7 +9,7 @@ from statistics import mode
 import time
 from collections import OrderedDict
 import json
-from .randaugment import RandAugmentMC
+from dataset.randaugment import RandAugmentMC
 
 
 import numpy as np
