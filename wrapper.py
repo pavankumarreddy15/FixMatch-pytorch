@@ -149,11 +149,7 @@ class MyDataset(Dataset):
         if self.transform:
             x = Image.fromarray(np.array(self.data[index]).astype(np.uint8).transpose(1,2,0))
             x = self.transform(x)
-        if self.labeled:
-            return x, y
-        else:
-            #print(x)
-            return x
+        return x,y
     
     def __len__(self):
         return len(self.data)
