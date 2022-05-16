@@ -721,7 +721,7 @@ if __name__ == "__main__":
             labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
             labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
             labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))])
-            labeled_dataset = MyDataset(data=labeled_x,data=labeled_y,transform=transform_labeled)
+            labeled_dataset = MyDataset(data=labeled_x,targets=labeled_y,transform=transform_labeled)
             labeled_dataloader = DataLoader(labeled_dataset)
             unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
