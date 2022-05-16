@@ -131,7 +131,7 @@ class CustomDataset(Dataset):
       
 class MyDataset(Dataset):
     def __init__(self, data, targets, transform=None, labeled=True):
-      self.labeled = labeled
+        self.labeled = labeled
         if labeled:
             self.data = data
             self.targets = torch.LongTensor(targets)
