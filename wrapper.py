@@ -555,12 +555,12 @@ if __name__ == "__main__":
             np.save(os.path.join(_EXP_DATA_DIR, "u_train_"+args.setting), u_train_set)
             labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
             labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
-            labeled_y = torch.Tensor([np.array(l_train_set['labels'][i]) for i in range(len(l_train_set['images']))])
+            labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))])
             labeled_dataset = TensorDataset(labeled_x,labeled_y)
             labeled_dataloader = DataLoader(labeled_dataset)
             unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
-            unlabeled_y = torch.Tensor([np.array(u_train_set['labels'][i]) for i in range(len(u_train_set['images']))])
+            unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
             unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
             unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
@@ -647,12 +647,12 @@ if __name__ == "__main__":
             np.save(os.path.join(_EXP_DATA_DIR, "u_train_"+args.setting), u_train_set)
             labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
             labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
-            labeled_y = torch.Tensor([np.array(l_train_set['labels'][i]) for i in range(len(l_train_set['images']))])
+            labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))])
             labeled_dataset = TensorDataset(labeled_x,labeled_y)
             labeled_dataloader = DataLoader(labeled_dataset)
             unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
-            unlabeled_y = torch.Tensor([np.array(u_train_set['labels'][i]) for i in range(len(u_train_set['images']))])
+            unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
             unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
             unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
@@ -725,12 +725,12 @@ if __name__ == "__main__":
             np.save(os.path.join(_EXP_DATA_DIR, "u_train_"+args.setting), u_train_set)
             labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
             labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
-            labeled_y = torch.Tensor([np.array(l_train_set['labels'][i]) for i in range(len(l_train_set['images']))])
+            labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))])
             labeled_dataset = TensorDataset(labeled_x,labeled_y)
             labeled_dataloader = DataLoader(labeled_dataset)
             unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
-            unlabeled_y = torch.Tensor([np.array(u_train_set['labels'][i]) for i in range(len(u_train_set['images']))])
+            unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
             unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
             unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
@@ -788,6 +788,17 @@ if __name__ == "__main__":
     u_train_set = {"images":u_images, "labels":u_labels}
     np.save(os.path.join(_EXP_DATA_DIR, "l_train_"+args.setting), l_train_set)
     np.save(os.path.join(_EXP_DATA_DIR, "u_train_"+args.setting), u_train_set)
+    
+    labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
+    labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
+    labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))])
+    labeled_dataset = TensorDataset(labeled_x,labeled_y)
+    labeled_dataloader = DataLoader(labeled_dataset)
+    unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
+    unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
+    unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
+    unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
+    unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
     print("------------------------last round SSL training---------------------------------")
     test_accuracies = train(args,labeled_trainloader=labeled_dataloader,unlabeled_trainloader=unlabeled_dataloader,test_loader=test_loader,optimizer=optimizer,model=net,ema_model=ema_model,scheduler=scheduler)
