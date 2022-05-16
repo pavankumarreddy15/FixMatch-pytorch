@@ -471,6 +471,11 @@ if __name__ == "__main__":
         transforms.ToTensor(),
         transforms.Normalize(mean=cifar10_mean, std=cifar10_std)
     ])
+    
+    if args.local_rank == 0:
+        torch.distributed.barrier()
+
+    train_sampler = RandomSampler if args.local_rank == -1 else DistributedSampler
 
     #Logs 
     logs = {}
@@ -550,7 +555,7 @@ if __name__ == "__main__":
     test_y = torch.Tensor([np.array([test_set['labels'][i]]).astype(np.int64) for i in range(len(test_set['images']))]).to(torch.long)
     my_testdataset = MyDataset(data=test_x,targets=test_y, transform=transform_val)
 #     my_testdataset = CustomDataset(my_testdataset,transform=TransformFixMatch)
-    test_loader = DataLoader(my_testdataset)
+    test_loader = DataLoader(my_testdataset,sampler=SequentialSampler(test_dataset),batch_size=args.batch_size,num_workers=args.num_workers)
     labeled_dataset = [[train_set['images'][i].astype(np.float32),train_set['labels'][i]] for i in range(len(train_set['images']))]
     # net = wrn.WRN(2, dataset_cfg["num_classes"], args.input_channels)
     net = build_wideresnet(depth=args.model_depth,widen_factor=args.model_width,dropout=0,num_classes=args.num_classes)
@@ -630,12 +635,12 @@ if __name__ == "__main__":
             labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
             labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]).astype(np.int64) for i in range(len(l_train_set['images']))]).to(torch.long)
             labeled_dataset = MyDataset(data=labeled_x,targets=labeled_y,transform=transform_labeled)
-            labeled_dataloader = DataLoader(labeled_dataset)
+            labeled_dataloader = DataLoader(labeled_dataset,sampler=train_sampler(labeled_dataset),batch_size=args.batch_size,num_workers=args.num_workers,drop_last=True)
             unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
             unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))]).to(torch.long)
             unlabeled_dataset = MyDataset(data=unlabeled_x,targets=unlabeled_y,transform=TransformFixMatch(mean=cifar10_mean,std=cifar10_std),labeled=False)
-            unlabeled_dataloader = DataLoader(unlabeled_dataset)
+            unlabeled_dataloader = DataLoader(unlabeled_dataset,sampler=train_sampler(unlabeled_dataset),batch_size=args.batch_size*args.mu,num_workers=args.num_workers,drop_last=True)
 
             print("------------------------First round SSL training---------------------------------")
             #training model
@@ -722,12 +727,12 @@ if __name__ == "__main__":
             labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
             labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))]).to(torch.long)
             labeled_dataset = MyDataset(data=labeled_x,targets=labeled_y,transform=transform_labeled)
-            labeled_dataloader = DataLoader(labeled_dataset)
+            labeled_dataloader = DataLoader(labeled_dataset,sampler=train_sampler(labeled_dataset),batch_size=args.batch_size,num_workers=args.num_workers,drop_last=True)
             unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
             unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))]).to(torch.long)
             unlabeled_dataset = MyDataset(data=unlabeled_x,targets=unlabeled_y,transform=TransformFixMatch(mean=cifar10_mean,std=cifar10_std),labeled=False)
-            unlabeled_dataloader = DataLoader(unlabeled_dataset)
+            unlabeled_dataloader = DataLoader(unlabeled_dataset,sampler=train_sampler(unlabeled_dataset),batch_size=args.batch_size*args.mu,num_workers=args.num_workers,drop_last=True)
 
             #training model
             print("------------------------" + str(cur_round)+ "th round SSL training---------------------------------")
@@ -800,12 +805,12 @@ if __name__ == "__main__":
             labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
             labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))]).to(torch.long)
             labeled_dataset = MyDataset(data=labeled_x,targets=labeled_y,transform=transform_labeled)
-            labeled_dataloader = DataLoader(labeled_dataset)
+            labeled_dataloader = DataLoader(labeled_dataset,sampler=train_sampler(labeled_dataset),batch_size=args.batch_size,num_workers=args.num_workers,drop_last=True)
             unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
             unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))]).to(torch.long)
             unlabeled_dataset = MyDataset(data=unlabeled_x,targets=unlabeled_y,transform=TransformFixMatch(mean=cifar10_mean,std=cifar10_std),labeled=False)
-            unlabeled_dataloader = DataLoader(unlabeled_dataset)
+            unlabeled_dataloader = DataLoader(unlabeled_dataset,sampler=train_sampler(unlabeled_dataset),batch_size=args.batch_size*args.mu,num_workers=args.num_workers,drop_last=True)
 
             #training model
             print("------------------------" + str(cur_round)+ "th round SSL training---------------------------------")
@@ -866,12 +871,12 @@ if __name__ == "__main__":
     labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
     labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))]).to(torch.long)
     labeled_dataset = MyDataset(data=labeled_x,targets=labeled_y,transform=transform_labeled)
-    labeled_dataloader = DataLoader(labeled_dataset)
+    labeled_dataloader = DataLoader(labeled_dataset,sampler=train_sampler(labeled_dataset),batch_size=args.batch_size,num_workers=args.num_workers,drop_last=True)
     unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
     unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
     unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))]).to(torch.long)
     unlabeled_dataset = MyDataset(data=unlabeled_x,targets=unlabeled_y,transform=TransformFixMatch(mean=cifar10_mean,std=cifar10_std),labeled=False)
-    unlabeled_dataloader = DataLoader(unlabeled_dataset)
+    unlabeled_dataloader = DataLoader(unlabeled_dataset,sampler=train_sampler(unlabeled_dataset),batch_size=args.batch_size*args.mu,num_workers=args.num_workers,drop_last=True)
 
     print("------------------------last round SSL training---------------------------------")
     test_accuracies = train(args,labeled_trainloader=labeled_dataloader,unlabeled_trainloader=unlabeled_dataloader,test_loader=test_loader,optimizer=optimizer,model=net,ema_model=ema_model,scheduler=scheduler)
