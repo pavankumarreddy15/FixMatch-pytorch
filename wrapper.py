@@ -132,13 +132,9 @@ class CustomDataset(Dataset):
 class MyDataset(Dataset):
     def __init__(self, data, targets, transform=None, labeled=True):
         self.labeled = labeled
-        if labeled:
-            self.data = data
-            self.targets = torch.LongTensor(targets)
-            self.transform = transform
-        else:
-            self.data = data
-            self.transform = transform
+        self.data = data
+        self.targets = torch.LongTensor(targets)
+        self.transform = transform
     def __getitem__(self, index):
         x = self.data[index]
         y = self.targets[index]
