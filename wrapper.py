@@ -170,7 +170,7 @@ def _load_cifar10():
     splits["train"] = train_data
     splits["test"]  = test_data
     splits["val"]   = val_data
-    return splits.values()
+    return splits.values(),sel_cls_idx
 
 def _load_svhn():
     splits = {}
@@ -193,7 +193,7 @@ def _load_svhn():
     splits["train"] = train_data
     splits["test"]  = test_data
     splits["val"]   = val_data
-    return splits.values()
+    return splits.values(),sel_cls_idx
 
 def select_subset(labeled_indices,unlabeled_indices,features,features_available,num_labels,numclasses,labels,images,total_size,setting,strat,model):
     if features_available and setting=="FL2MI":
@@ -368,9 +368,9 @@ def select_subset(labeled_indices,unlabeled_indices,features,features_available,
 
 if __name__ == "__main__":
     if args.dataset == "cifar10":
-        train_set, test_set, validation_set = _load_cifar10()
+        train_set, test_set, validation_set,sel_cls_idx = _load_cifar10()
     elif args.dataset == "svhn":
-        train_set, test_set = _load_svhn()
+        train_set, test_set, sel_cls_idx = _load_svhn()
     rng = np.random.RandomState(args.seed)
     indices = rng.permutation(len(train_set["images"]))
     train_set["images"] = train_set["images"][indices]
@@ -395,6 +395,7 @@ if __name__ == "__main__":
     logs["sel_budget"] = args.num_labeled//args.rounds
     logs["num_selections"] = args.rounds
     logs["model"] = "wrn"
+    logs["sel_cls_idx"] = sel_cls_idx
 
     setting = {}
     setting["imbalance_ratio"] = args.imbalance
