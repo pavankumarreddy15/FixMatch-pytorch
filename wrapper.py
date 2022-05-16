@@ -418,7 +418,7 @@ if __name__ == "__main__":
 
     #setting device
     if torch.cuda.is_available():
-        device = "cuda:"+args.gpudevice
+        device = "cuda:"+str(args.gpudevice)
         torch.backends.cudnn.benchmark = True
     else:
         device = "cpu"
