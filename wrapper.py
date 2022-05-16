@@ -120,13 +120,13 @@ parser.add_argument('--gpudevice',default=0,type=int,help="gpu device to be used
 args = parser.parse_args()
 
 class CustomDataset(Dataset):
-	def __init__(self,transform=None,target_transform=None):
-		super().init(self,transform=None,target_transform=None)
-	def __getitem__(self,index):
-		img, target = self.data[index], self.targets[index]
-        if self.transform is not None:
-            img = self.transform(img)
-        return img,target
+    def __init__(self,transform=None,target_transform=None):
+        super().init(self,transform=None,target_transform=None)
+    def __getitem__(self,index):
+        img, target = self.data[index], self.targets[index]
+	if self.transform is not None:
+	    img = self.transform(img)
+	return img,target
       
 class TransformFixMatch(object):
     def __init__(self, mean, std):
