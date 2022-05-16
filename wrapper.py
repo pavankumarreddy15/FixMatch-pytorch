@@ -388,6 +388,17 @@ if __name__ == "__main__":
     np.save(os.path.join(_EXP_DATA_DIR, "train_"+args.setting), train_set)
     np.save(os.path.join(_EXP_DATA_DIR, "val_"+args.setting), validation_set)
     np.save(os.path.join(_DATA_DIR, args.dataset, "test"), test_set)
+    
+    if args.local_rank == -1:
+        device = torch.device('cuda', args.gpu_id)
+        args.world_size = 1
+        args.n_gpu = torch.cuda.device_count()
+    else:
+        torch.cuda.set_device(args.local_rank)
+        device = torch.device('cuda', args.local_rank)
+        torch.distributed.init_process_group(backend='nccl')
+        args.world_size = torch.distributed.get_world_size()
+        args.n_gpu = 1
 
     #Logs 
     logs = {}
