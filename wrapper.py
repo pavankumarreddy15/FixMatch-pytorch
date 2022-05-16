@@ -15,7 +15,7 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import LambdaLR
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
+from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
@@ -473,7 +473,11 @@ if __name__ == "__main__":
     all_cls_acc = [[] for i in range(numclasses)]
     sel_per_cls = []
     train_dataset = [train_set['images'][i].astype(np.float32) for i in range(len(train_set['images']))]
-    test_loader = [[test_set['images'][i].astype(np.float32),test_set['labels'][i]] for i in range(len(test_set['images']))]
+    test_dataset = [[test_set['images'][i].astype(np.float32),test_set['labels'][i]] for i in range(len(test_set['images']))]
+    test_x = torch.Tensor([np.array(test_set['images'][i].astype(np.float32)) for i in range(len(test_set['images']))])
+    test_y = torch.Tensor([np.array(test_set['labels'][i]) for i in range(len(test_set['images']))])
+    my_testdataset = TensorDataset(test_x,test_y)
+    test_loader = DataLoader(my_dataset)
     labeled_dataset = [[train_set['images'][i].astype(np.float32),train_set['labels'][i]] for i in range(len(train_set['images']))]
     # net = wrn.WRN(2, dataset_cfg["num_classes"], args.input_channels)
     net = build_wideresnet(depth=args.model_depth,widen_factor=args.model_width,dropout=0,num_classes=args.num_classes)
@@ -549,8 +553,16 @@ if __name__ == "__main__":
             u_train_set = {"images":u_images, "labels":u_labels}
             np.save(os.path.join(_EXP_DATA_DIR, "l_train_"+args.setting), l_train_set)
             np.save(os.path.join(_EXP_DATA_DIR, "u_train_"+args.setting), u_train_set)
-            labeled_dataloader = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
+            labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
+            labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
+            labeled_y = torch.Tensor([np.array(l_train_set['labels'][i]) for i in range(len(l_train_set['images']))])
+            labeled_dataset = TensorDataset(labeled_x,labeled_y)
+            labeled_dataloader = DataLoader(labeled_dataset)
             unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
+            unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
+            unlabeled_y = torch.Tensor([np.array(u_train_set['labels'][i]) for i in range(len(u_train_set['images']))])
+            unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
+            unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
             print("------------------------First round SSL training---------------------------------")
             #training model
@@ -633,6 +645,16 @@ if __name__ == "__main__":
             u_train_set = {"images":u_images, "labels":u_labels}
             np.save(os.path.join(_EXP_DATA_DIR, "l_train_"+args.setting), l_train_set)
             np.save(os.path.join(_EXP_DATA_DIR, "u_train_"+args.setting), u_train_set)
+            labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
+            labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
+            labeled_y = torch.Tensor([np.array(l_train_set['labels'][i]) for i in range(len(l_train_set['images']))])
+            labeled_dataset = TensorDataset(labeled_x,labeled_y)
+            labeled_dataloader = DataLoader(labeled_dataset)
+            unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
+            unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
+            unlabeled_y = torch.Tensor([np.array(u_train_set['labels'][i]) for i in range(len(u_train_set['images']))])
+            unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
+            unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
             #training model
             print("------------------------" + str(cur_round)+ "th round SSL training---------------------------------")
@@ -701,6 +723,16 @@ if __name__ == "__main__":
             u_train_set = {"images":u_images, "labels":u_labels}
             np.save(os.path.join(_EXP_DATA_DIR, "l_train_"+args.setting), l_train_set)
             np.save(os.path.join(_EXP_DATA_DIR, "u_train_"+args.setting), u_train_set)
+            labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
+            labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
+            labeled_y = torch.Tensor([np.array(l_train_set['labels'][i]) for i in range(len(l_train_set['images']))])
+            labeled_dataset = TensorDataset(labeled_x,labeled_y)
+            labeled_dataloader = DataLoader(labeled_dataset)
+            unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
+            unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
+            unlabeled_y = torch.Tensor([np.array(u_train_set['labels'][i]) for i in range(len(u_train_set['images']))])
+            unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
+            unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
             #training model
             print("------------------------" + str(cur_round)+ "th round SSL training---------------------------------")
