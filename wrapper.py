@@ -131,6 +131,7 @@ class CustomDataset(Dataset):
       
 class MyDataset(Dataset):
     def __init__(self, data, targets, transform=None, labeled=True):
+      self.labeled = labeled
         if labeled:
             self.data = data
             self.targets = torch.LongTensor(targets)
@@ -145,7 +146,7 @@ class MyDataset(Dataset):
         if self.transform:
             x = Image.fromarray(np.array(self.data[index]).astype(np.uint8).transpose(1,2,0))
             x = self.transform(x)
-        if labeled:
+        if self.labeled:
             return x, y
         else:
             return x
