@@ -9,6 +9,8 @@ from statistics import mode
 import time
 from collections import OrderedDict
 import json
+from .randaugment import RandAugmentMC
+
 
 import numpy as np
 import torch
@@ -19,6 +21,7 @@ from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, Tenso
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+from torchvision import transforms
 
 from dataset.cifar import DATASET_GETTERS
 from utils import AverageMeter, accuracy
@@ -115,6 +118,37 @@ parser.add_argument('--model_depth',default=28,type=int,help="depth of wrn used"
 parser.add_argument('--gpudevice',default=0,type=int,help="gpu device to be used")
 
 args = parser.parse_args()
+
+class CustomDataset(Dataset):
+	def __init__(self,transform=None,target_transform=None):
+		super().init(self,transform=None,target_transform=None)
+	def __getitem__(self,index):
+		img, target = self.data[index], self.targets[index]
+        if self.transform is not None:
+            img = self.transform(img)
+        return img,target
+      
+class TransformFixMatch(object):
+    def __init__(self, mean, std):
+        self.weak = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomCrop(size=32,
+                                  padding=int(32*0.125),
+                                  padding_mode='reflect')])
+        self.strong = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomCrop(size=32,
+                                  padding=int(32*0.125),
+                                  padding_mode='reflect'),
+            RandAugmentMC(n=2, m=10)])
+        self.normalize = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=mean, std=std)])
+
+    def __call__(self, x):
+        weak = self.weak(x)
+        strong = self.strong(x)
+        return self.normalize(weak), self.normalize(strong)
 
 def counter(labeled_indices,labels):
     d = {}
@@ -477,6 +511,7 @@ if __name__ == "__main__":
     test_x = torch.Tensor([np.array(test_set['images'][i].astype(np.float32)) for i in range(len(test_set['images']))])
     test_y = torch.Tensor([np.array([test_set['labels'][i]]) for i in range(len(test_set['images']))])
     my_testdataset = TensorDataset(test_x,test_y)
+#     my_testdataset = CustomDataset(my_testdataset,transform=TransformFixMatch)
     test_loader = DataLoader(my_testdataset)
     labeled_dataset = [[train_set['images'][i].astype(np.float32),train_set['labels'][i]] for i in range(len(train_set['images']))]
     # net = wrn.WRN(2, dataset_cfg["num_classes"], args.input_channels)
@@ -562,6 +597,7 @@ if __name__ == "__main__":
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
             unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
             unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
+            unlabeled_dataset = CustomDataset(unlabeled_dataset,transform=TransformFixMatch)
             unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
             print("------------------------First round SSL training---------------------------------")
@@ -654,6 +690,7 @@ if __name__ == "__main__":
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
             unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
             unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
+            unlabeled_dataset = CustomDataset(unlabeled_dataset,transform=TransformFixMatch)
             unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
             #training model
@@ -732,6 +769,7 @@ if __name__ == "__main__":
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
             unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
             unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
+            unlabeled_dataset = CustomDataset(unlabeled_dataset,transform=TransformFixMatch)
             unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
             #training model
@@ -798,6 +836,7 @@ if __name__ == "__main__":
     unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
     unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
     unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
+    unlabeled_dataset = CustomDataset(unlabeled_dataset,transform=TransformFixMatch)
     unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
     print("------------------------last round SSL training---------------------------------")
