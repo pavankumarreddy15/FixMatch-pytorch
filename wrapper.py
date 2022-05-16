@@ -10,6 +10,7 @@ import time
 from collections import OrderedDict
 import json
 from dataset.randaugment import RandAugmentMC
+from PIL import Image
 
 
 import numpy as np
@@ -127,6 +128,25 @@ class CustomDataset(Dataset):
         if self.transform is not None:
             img = self.transform(img)
         return img,target
+      
+class MyDataset(Dataset):
+    def __init__(self, data, targets, transform=None):
+        self.data = data
+        self.targets = torch.LongTensor(targets)
+        self.transform = transform
+        
+    def __getitem__(self, index):
+        x = self.data[index]
+        y = self.targets[index]
+        
+        if self.transform:
+            x = Image.fromarray(self.data[index].astype(np.uint8).transpose(1,2,0))
+            x = self.transform(x)
+        
+        return x, y
+    
+    def __len__(self):
+        return len(self.data)
       
 class TransformFixMatch(object):
     def __init__(self, mean, std):
@@ -433,6 +453,24 @@ if __name__ == "__main__":
         torch.distributed.init_process_group(backend='nccl')
         args.world_size = torch.distributed.get_world_size()
         args.n_gpu = 1
+    cifar10_mean = (0.4914, 0.4822, 0.4465)
+    cifar10_std = (0.2471, 0.2435, 0.2616)
+    normal_mean = (0.5, 0.5, 0.5)
+    normal_std = (0.5, 0.5, 0.5)
+    
+    transform_labeled = transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(size=32,
+                              padding=int(32*0.125),
+                              padding_mode='reflect'),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=cifar10_mean, std=cifar10_std)
+    ])
+    
+    transform_val = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=cifar10_mean, std=cifar10_std)
+    ])
 
     #Logs 
     logs = {}
@@ -510,7 +548,7 @@ if __name__ == "__main__":
     test_dataset = [[test_set['images'][i].astype(np.float32),test_set['labels'][i]] for i in range(len(test_set['images']))]
     test_x = torch.Tensor([np.array(test_set['images'][i].astype(np.float32)) for i in range(len(test_set['images']))])
     test_y = torch.Tensor([np.array([test_set['labels'][i]]) for i in range(len(test_set['images']))])
-    my_testdataset = TensorDataset(test_x,test_y)
+    my_testdataset = MyDataset(data=test_x,targets=test_y, transform=transform_val)
 #     my_testdataset = CustomDataset(my_testdataset,transform=TransformFixMatch)
     test_loader = DataLoader(my_testdataset)
     labeled_dataset = [[train_set['images'][i].astype(np.float32),train_set['labels'][i]] for i in range(len(train_set['images']))]
@@ -591,13 +629,12 @@ if __name__ == "__main__":
             labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
             labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
             labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))])
-            labeled_dataset = TensorDataset(labeled_x,labeled_y)
+            labeled_dataset = MyDataset(data=labeled_x,data=labeled_y,transform=transform_labeled)
             labeled_dataloader = DataLoader(labeled_dataset)
             unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
             unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
-            unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
-            unlabeled_dataset = CustomDataset(unlabeled_dataset,transform=TransformFixMatch)
+            unlabeled_dataset = MyDataset(data=unlabeled_x,targets=unlabeled_y,transform=TransformFixMatch(mean=cifar10_mean,std=cifar10_std))
             unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
             print("------------------------First round SSL training---------------------------------")
@@ -684,13 +721,12 @@ if __name__ == "__main__":
             labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
             labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
             labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))])
-            labeled_dataset = TensorDataset(labeled_x,labeled_y)
+            labeled_dataset = MyDataset(data=labeled_x,data=labeled_y,transform=transform_labeled)
             labeled_dataloader = DataLoader(labeled_dataset)
             unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
             unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
-            unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
-            unlabeled_dataset = CustomDataset(unlabeled_dataset,transform=TransformFixMatch)
+            unlabeled_dataset = MyDataset(data=unlabeled_x,targets=unlabeled_y,transform=TransformFixMatch(mean=cifar10_mean,std=cifar10_std))
             unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
             #training model
@@ -763,13 +799,12 @@ if __name__ == "__main__":
             labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
             labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
             labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))])
-            labeled_dataset = TensorDataset(labeled_x,labeled_y)
+            labeled_dataset = MyDataset(data=labeled_x,data=labeled_y,transform=transform_labeled)
             labeled_dataloader = DataLoader(labeled_dataset)
             unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
             unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
             unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
-            unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
-            unlabeled_dataset = CustomDataset(unlabeled_dataset,transform=TransformFixMatch)
+            unlabeled_dataset = MyDataset(data=unlabeled_x,targets=unlabeled_y,transform=TransformFixMatch(mean=cifar10_mean,std=cifar10_std))
             unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
             #training model
@@ -830,13 +865,12 @@ if __name__ == "__main__":
     labeled_data = [[l_train_set['images'][i].astype(np.float32),l_train_set['labels'][i]] for i in range(len(l_train_set['images']))]
     labeled_x = torch.Tensor([np.array(l_train_set['images'][i].astype(np.float32)) for i in range(len(l_train_set['images']))])
     labeled_y = torch.Tensor([np.array([l_train_set['labels'][i]]) for i in range(len(l_train_set['images']))])
-    labeled_dataset = TensorDataset(labeled_x,labeled_y)
+    labeled_dataset = MyDataset(data=labeled_x,targets=labeled_y,transform=transform_labeled)
     labeled_dataloader = DataLoader(labeled_dataset)
     unlabeled_dataloader = [[u_train_set['images'][i].astype(np.float32)] for i in range(len(u_train_set['images']))]
     unlabeled_x = torch.Tensor([np.array(u_train_set['images'][i].astype(np.float32)) for i in range(len(u_train_set['images']))])
     unlabeled_y = torch.Tensor([np.array([u_train_set['labels'][i]]) for i in range(len(u_train_set['images']))])
-    unlabeled_dataset = TensorDataset(unlabeled_x,unlabeled_y)
-    unlabeled_dataset = CustomDataset(unlabeled_dataset,transform=TransformFixMatch)
+    unlabeled_dataset = MyDataset(data=unlabeled_x,targets=unlabeled_y,transform=TransformFixMatch(mean=cifar10_mean,std=cifar10_std))
     unlabeled_dataloader = DataLoader(unlabeled_dataset)
 
     print("------------------------last round SSL training---------------------------------")
