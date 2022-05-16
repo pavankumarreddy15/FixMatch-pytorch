@@ -112,6 +112,7 @@ parser.add_argument('--run',default=1,type=int,help='number of run performing')
 parser.add_argument('--num_classes',default=10,type=int,help='number of classes in dataset')
 parser.add_argument('--model_width',default=2,type=int,help="width of wrn used")
 parser.add_argument('--model_depth',default=28,type=int,help="depth of wrn used")
+parser.add_argument('--gpudevice',default=0,type=int,help="gpu device to be used")
 
 args = parser.parse_args()
 
