@@ -140,8 +140,11 @@ class MyDataset(Dataset):
             self.data = data
             self.transform = transform
     def __getitem__(self, index):
-        x = self.data[index]
-        y = self.targets[index]
+        if self.labeled:
+            x = self.data[index]
+            y = self.targets[index]
+        else:
+            x = self.data[index]
         
         if self.transform:
             x = Image.fromarray(np.array(self.data[index]).astype(np.uint8).transpose(1,2,0))
