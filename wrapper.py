@@ -125,7 +125,7 @@ class CustomDataset(Dataset):
     def __getitem__(self,index):
         img, target = self.data[index], self.targets[index]
         if self.transform is not None:
-        img = self.transform(img)
+            img = self.transform(img)
         return img,target
       
 class TransformFixMatch(object):
