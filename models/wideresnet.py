@@ -107,15 +107,29 @@ class WideResNet(nn.Module):
                 nn.init.xavier_normal_(m.weight)
                 nn.init.constant_(m.bias, 0.0)
 
-    def forward(self, x):
-        out = self.conv1(x)
-        out = self.block1(out)
-        out = self.block2(out)
-        out = self.block3(out)
-        out = self.relu(self.bn1(out))
-        out = F.adaptive_avg_pool2d(out, 1)
-        out = out.view(-1, self.channels)
-        return self.fc(out)
+    def forward(self, x, last=False, freeze=false):
+        if freeze:
+            with torch.no_grad():
+                out = self.conv1(x)
+                out = self.block1(out)
+                out = self.block2(out)
+                out = self.block3(out)
+                out = self.relu(self.bn1(out))
+                out = F.adaptive_avg_pool2d(out, 1)
+                out = out.view(-1, self.channels)
+        else:
+            out = self.conv1(x)
+            out = self.block1(out)
+            out = self.block2(out)
+            out = self.block3(out)
+            out = self.relu(self.bn1(out))
+            out = F.adaptive_avg_pool2d(out, 1)
+            out = out.view(-1, self.channels)
+        c = self.fc(out)
+        if last:
+            return [c,out]
+        else:
+            return c
     def get_embedding_dim(self):
         return self.widen_factor*64
 
