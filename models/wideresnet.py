@@ -107,7 +107,7 @@ class WideResNet(nn.Module):
                 nn.init.xavier_normal_(m.weight)
                 nn.init.constant_(m.bias, 0.0)
 
-    def forward(self, x, last=False, freeze=false):
+    def forward(self, x, last=False, freeze=False):
         if freeze:
             with torch.no_grad():
                 out = self.conv1(x)
