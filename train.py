@@ -356,7 +356,8 @@ def train(args, labeled_trainloader, unlabeled_trainloader, test_loader,
             logits_x = logits[:batch_size]
             logits_u_w, logits_u_s = logits[batch_size:].chunk(2)
             del logits
-            print(targets_x.size())
+#             print(targets_x.size())
+            targets_x = torch.reshape(targets_x,(-1,))
             Lx = F.cross_entropy(logits_x, targets_x, reduction='mean')
 
             pseudo_label = torch.softmax(logits_u_w.detach()/args.T, dim=-1)
