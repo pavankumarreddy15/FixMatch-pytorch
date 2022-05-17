@@ -69,6 +69,8 @@ parser.add_argument('--arch', default='wideresnet', type=str,
                     help='dataset name')
 parser.add_argument('--total-steps', default=2**20, type=int,
                     help='number of total steps to run')
+parser.add_argument('--supervised-steps',default=2**12,type=int,help='number of supervised steps to run')
+parser.add_argument('--supervised-evalstep',default=2**7,type=int,help='number of supervised eval steps to run')
 parser.add_argument('--eval-step', default=1024, type=int,
                     help='number of eval steps to run')
 parser.add_argument('--start-epoch', default=0, type=int,
@@ -531,6 +533,8 @@ if __name__ == "__main__":
     numrounds = args.rounds
 
     cur_round = 1
+    tot_steps = args.total_steps
+    eval_step = args.eval_step
 
     images = train_set["images"]
     labels = train_set["labels"]
@@ -649,6 +653,8 @@ if __name__ == "__main__":
             print("------------------------First round SSL training---------------------------------")
             #training model
             args.alg = "supervised"
+            args.total_steps = args.supervised_steps
+            args.eval_step = args.supervised_evalstep
             test_accuracies = train(args,labeled_trainloader=labeled_dataloader,unlabeled_trainloader=unlabeled_dataloader,test_loader=test_loader,optimizer=optimizer,model=net,ema_model=ema_model,scheduler=scheduler)
             test_accs.append(test_accuracies)
             #subprocess.run(["python3","train.py","--dataset",args.dataset,"--alg","supervised","--output",exp_dir,"--validation",str(args.validation),"--root",args.root,"--nlabels",str(n_labels),"--gpudevice",args.gpudevice,"--setting",args.setting,"--run",str(args.run),"--round",str(cur_round),"--iteration",str(args.iterations), "--input_channels", str(args.input_channels)])
@@ -741,6 +747,8 @@ if __name__ == "__main__":
             #training model
             print("------------------------" + str(cur_round)+ "th round SSL training---------------------------------")
             args.alg = "supervised"
+            args.total_steps = args.supervised_steps
+            args.eval_step = args.supervised_evalstep
             test_accuracies = train(args,labeled_trainloader=labeled_dataloader,unlabeled_trainloader=unlabeled_dataloader,test_loader=test_loader,optimizer=optimizer,model=net,ema_model=ema_model,scheduler=scheduler)
             test_accs.append(test_accuracies)
             cur_round += 1
@@ -819,6 +827,8 @@ if __name__ == "__main__":
             #training model
             print("------------------------" + str(cur_round)+ "th round SSL training---------------------------------")
             args.alg = 'supervised'
+            args.total_steps = args.supervised_steps
+            args.eval_step = args.supervised_evalstep
             test_accuracies = train(args,labeled_trainloader=labeled_dataloader,unlabeled_trainloader=unlabeled_dataloader,test_loader=test_loader,optimizer=optimizer,model=net,ema_model=ema_model,scheduler=scheduler)
             test_accs.append(test_accuracies)
             cur_round += 1
@@ -883,6 +893,8 @@ if __name__ == "__main__":
     unlabeled_dataloader = DataLoader(unlabeled_dataset,sampler=train_sampler(unlabeled_dataset),batch_size=args.batch_size*args.mu,num_workers=args.num_workers,drop_last=True)
 
     print("------------------------last round SSL training---------------------------------")
+    args.total_steps = tot_steps
+    args.eval_step = eval_step
     test_accuracies = train(args,labeled_trainloader=labeled_dataloader,unlabeled_trainloader=unlabeled_dataloader,test_loader=test_loader,optimizer=optimizer,model=net,ema_model=ema_model,scheduler=scheduler)
     test_accs.append(test_accuracies)
     logs["test_acc"] = test_accs
