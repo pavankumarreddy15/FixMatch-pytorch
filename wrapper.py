@@ -211,7 +211,7 @@ def _load_cifar10():
     print(per_class_train)
     sel_cls_idx = list(range(5))
     split_cfg = {"per_imbclass_train":450,"per_imbclass_val":50,"per_imbclass_lake":0,"per_class_train":per_class_train,"per_class_val":per_class_val,"per_class_lake":per_class_lake,"sel_cls_idx":[3,5,8]}
-    train_set, val_set, test_set, lake_set, imb_cls_idx, num_cls = load_dataset_custom("data","cifar10","classimb",split_cfg,augVal=True,dataAug=True)
+    train_set, val_set, test_set, lake_set, imb_cls_idx, num_cls = load_dataset_custom("data","cifar10","classimb",split_cfg,augVal=False,dataAug=False)
     train_data = {}
     test_data  = {}
     val_data   = {}
@@ -234,7 +234,7 @@ def _load_svhn():
     per_class_val   = [700 for i in range(10)]
     per_class_lake  = [0 for i in range(10)]
     split_cfg = {"per_imbclass_train":2500,"per_imbclass_val":500,"per_imbclass_lake":0,"per_class_train":per_class_train,"per_class_val":per_class_val,"per_class_lake":per_class_lake,"sel_cls_idx":[3,5,8]}
-    train_set, val_set, test_set, lake_set, imb_cls_idx, num_cls = load_dataset_custom("data","svhn","classimb",split_cfg,augVal=True,dataAug=True)
+    train_set, val_set, test_set, lake_set, imb_cls_idx, num_cls = load_dataset_custom("data","svhn","classimb",split_cfg,augVal=False,dataAug=False)
     train_data = {}
     test_data  = {}
     val_data   = {}
@@ -442,6 +442,10 @@ if __name__ == "__main__":
     np.save(os.path.join(_EXP_DATA_DIR, "train_"+args.setting), train_set)
     np.save(os.path.join(_EXP_DATA_DIR, "val_"+args.setting), validation_set)
     np.save(os.path.join(_DATA_DIR, args.dataset, "test"), test_set)
+    
+    if args.local_rank in [-1, 0]:
+        os.makedirs(args.out, exist_ok=True)
+        args.writer = SummaryWriter(args.out)
     
     if args.local_rank == -1:
         device = torch.device('cuda', args.gpu_id)
