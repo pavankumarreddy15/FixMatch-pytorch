@@ -72,6 +72,7 @@ class NetworkBlock(nn.Module):
 class WideResNet(nn.Module):
     def __init__(self, num_classes, depth=28, widen_factor=2, drop_rate=0.0):
         super(WideResNet, self).__init__()
+        self.widen_factor=widen_factor
         channels = [16, 16*widen_factor, 32*widen_factor, 64*widen_factor]
         assert((depth - 4) % 6 == 0)
         n = (depth - 4) / 6
@@ -115,6 +116,8 @@ class WideResNet(nn.Module):
         out = F.adaptive_avg_pool2d(out, 1)
         out = out.view(-1, self.channels)
         return self.fc(out)
+    def get_embedding_dim(self):
+        return self.widen_factor*64
 
 
 def build_wideresnet(depth, widen_factor, dropout, num_classes):
