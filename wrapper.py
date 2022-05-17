@@ -706,7 +706,7 @@ if __name__ == "__main__":
 
             #selecting new points
             print("------------------------Subset selection in process in "+ str(cur_round)+"th round---------------------------------")
-            labeled_indices,unlabeled_indices = select_subset(labeled_indices=labeled_indices,unlabeled_indices=unlabeled_indices,features=features,features_available=True,num_labels=n_labels,numclasses=numclasses,labels=labels,images=images,total_size=datasize,setting=args.setting,strat=strat,model=model)
+            labeled_indices,unlabeled_indices = select_subset(labeled_indices=labeled_indices,unlabeled_indices=unlabeled_indices,features=features,features_available=True,num_labels=n_labels,numclasses=numclasses,labels=labels,images=images,total_size=datasize,setting=args.setting,strat=strat,model=net)
             if args.setting=="BADGE" or args.setting=="US":
                 X = list(np.array(train_dataset)[labeled_indices])
                 Y = labels[labeled_indices]
@@ -784,7 +784,7 @@ if __name__ == "__main__":
 
             #selecting new points
             print("------------------------Subset selection in process in "+ str(cur_round)+"th round---------------------------------")
-            labeled_indices,unlabeled_indices = select_subset(labeled_indices=labeled_indices,unlabeled_indices=unlabeled_indices,features=features,features_available=True,num_labels=n_labels,numclasses=numclasses,labels=labels,images=images,total_size=datasize,setting=args.setting,strat=strat,model=model)
+            labeled_indices,unlabeled_indices = select_subset(labeled_indices=labeled_indices,unlabeled_indices=unlabeled_indices,features=features,features_available=True,num_labels=n_labels,numclasses=numclasses,labels=labels,images=images,total_size=datasize,setting=args.setting,strat=strat,model=net)
             if args.setting=="BADGE" or args.setting=="US":
                 X = list(np.array(train_dataset)[labeled_indices])
                 Y = labels[labeled_indices]
